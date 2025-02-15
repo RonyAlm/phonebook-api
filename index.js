@@ -5,6 +5,7 @@ const app = express();
 
 app.use(express.json());
 app.use(cors());
+app.use(express.static('dist'));
 
 morgan.token('body', (req, res) => {
     return req.method === 'POST' ? JSON.stringify(req.body) : '';
@@ -77,7 +78,19 @@ app.post('/api/persons', (req, res) => {
     res.status(201).json(person);
 });
 
-const PORT = process.env.PORT || 3001;
+app.path('/api/persons/:id', (req, res) => {
+    const id = Number(req.params.id);
+    const person = persons.find(person => person.id === id);
+    console.log(person);
+    if (person) {
+        person.number = req.body.number;
+        res.status(200).json(person);
+    } else {
+        res.status(404).json({ error: 'person not found' });
+    }
+});
+
+const PORT = process.env.PORT || 3005;
 app.listen(PORT, () => {
     console.log(`Server running on port http://localhost:${PORT}`);
 });
