@@ -78,16 +78,19 @@ app.post('/api/persons', (req, res) => {
     res.status(201).json(person);
 });
 
-app.path('/api/persons/:id', (req, res) => {
+app.put('/api/persons/:id', (req, res) => {
     const id = Number(req.params.id);
-    const person = persons.find(person => person.id === id);
-    console.log(person);
-    if (person) {
-        person.number = req.body.number;
-        res.status(200).json(person);
-    } else {
-        res.status(404).json({ error: 'person not found' });
+    const updatedPerson = req.body;
+    const person = persons.find(p => p.id === id);
+    if (!person) {
+        return res.status(404).end();
     }
+    if (!updatedPerson.name || !updatedPerson.number) {
+        return res.status(400).json({ error: 'name or number missing' });
+    }
+    person.name = updatedPerson.name;
+    person.number = updatedPerson.number;
+    res.status(200).json(person);
 });
 
 const PORT = process.env.PORT || 3005;
