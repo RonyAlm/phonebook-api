@@ -25,3 +25,5 @@ request/*
 *.njsproj
 *.sln
 *.sw?
+
+eslint.config.mjs
