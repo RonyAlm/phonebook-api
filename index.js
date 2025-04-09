@@ -6,7 +6,6 @@ const Person = require('./models/Person');
 const express = require('express');
 const morgan = require('morgan');
 const cors = require('cors');
-const e = require('express');
 const app = express();
 
 app.use(express.json());
@@ -73,7 +72,7 @@ app.delete('/api/persons/:id', (req, res, next) => {
         });
 });
 
-app.post('/api/persons', (req, res) => {
+app.post('/api/persons', (req, res, next) => {
     const person = req.body;
     if (!person.name || !person.number) {
         return res.status(400).json({ error: 'name or number missing' });
@@ -84,9 +83,13 @@ app.post('/api/persons', (req, res) => {
         number: person.number
     });
 
-    newPerson.save().then(savedPerson => {
-        res.status(201).json(savedPerson);
-    });
+    newPerson.save()
+        .then(savedPerson => {
+            res.status(201).json(savedPerson);
+        })
+        .catch(error => {
+            next(error);
+        })
 
 });
 
@@ -103,7 +106,7 @@ app.put('/api/persons/:id', (req, res, next) => {
         number: body.number
     };
 
-    Person.findByIdAndUpdate(id, newPerson, { new: true })
+    Person.findByIdAndUpdate(id, newPerson, { new: true }, { runValidators: true }, { context: 'query' })
         .then(updatedPerson => {
             if (!updatedPerson) {
                 return res.status(404).json({ error: 'Person not found' });
@@ -125,6 +128,8 @@ const errorHandler = (error, req, res, next) => {
     console.error(error.message);
     if (error.name === 'CastError') {
         return res.status(400).send({ error: 'malformatted id' });
+    } else if (error.name === 'ValidationError') {
+        return res.status(400).json({ error: error.message });
     } else {
         return res.status(500).json({ error: error.message });
     }
